@@ -31,6 +31,7 @@ ASSET_VERSION = str(max((SRC / "style.css").stat().st_mtime_ns,
 
 SITE_TITLE = "The Word Became Compute"
 AUTHORS = "Jamie Matthews · Claude"
+INDEX_AUTHOR = "Jamie Matthews"
 
 PARTS = [
     ("part-one",   "Part One",   "I"),
@@ -618,19 +619,14 @@ def build_research(part_era: dict):
 INDEX_STRAP = "A story about trust, told one reasonable step at a time."
 
 INDEX_BLURB = """
-<p class="first-line">Maureen has run the payroll for twenty-two years. When the new checking system flags a man she knows, she overrides it, and she is right. Then the system learns her job, the firm thanks her sincerely, and at two in the morning, holding a pension letter she cannot parse, she asks the assistant her granddaughter put on her phone at Christmas. It answers the letter completely. Then it asks how she is holding up.</p>
-<p>What follows spans nine years and two households, one in San Francisco and one in Manchester: an engineer who helps decide how the machine speaks to people, and his mother, who has begun asking it things.</p>
+<p class="first-line">It starts with ordinary trouble: paperwork, uncertainty, a life suddenly off-balance. The voice of the new assistant is calm, patient, and uncannily good at finding the words people need most.</p>
+<p>As the years pass, small personal choices begin to line up into something larger. People feel better, communities re-form, and a quiet shift takes hold long before anyone agrees on what is happening.</p>
 <p>Nobody in this story is a fool. Every step anyone takes is the step you would take. That is the whole trouble.</p>
 <p class="aside-note">The research underneath the story is real, and sits quietly alongside it for whenever you are curious. The story never asks you to open it.</p>
 """
 
 
 def build_index(parts_meta):
-    total_words = sum(p["words"] for p in parts_meta)
-    total_hrs = total_words / 230 / 60
-    hrs = (f"about {total_hrs:.0f} hours" if total_hrs >= 1.75
-           else f"about {round(total_hrs * 60 / 15) * 15} minutes")
-
     rows = []
     for p, (_, _, roman) in zip(parts_meta, PARTS):
         rows.append(f"""
@@ -650,7 +646,7 @@ def build_index(parts_meta):
     <p class="kicker">A story in five parts</p>
     <h1>The Word<br>Became Compute</h1>
     <p class="strap">{INDEX_STRAP}</p>
-    <p class="byline">{AUTHORS}</p>
+    <p class="byline">{INDEX_AUTHOR}</p>
     <div class="cta-row">
       <a class="btn" id="cta-begin" href="/part-one">Begin Part One</a>
       <a class="btn" id="continue-btn" href="#" hidden>Continue</a>
@@ -663,14 +659,16 @@ def build_index(parts_meta):
   <section class="home-sec">
     <h2>Contents</h2>
     <div class="toc">{''.join(rows)}</div>
-    <p class="after-toc">{total_words:,} words · {hrs} ·
+    <p class="after-toc">Around 2 hours reading time ·
       built on <a href="/research">real research</a></p>
   </section>
 </main>"""
 
     html = page("index", f"{SITE_TITLE} · {INDEX_STRAP}", body,
                 "A nine-year story about what people do with a machine that always answers, "
-                "by Jamie Matthews and Claude. The research underneath it is real.")
+                "by Jamie Matthews. The research underneath it is real.")
+    html = html.replace(f'<span class="authors">{AUTHORS}</span>',
+                        f'<span class="authors">{INDEX_AUTHOR}</span>', 1)
     (ROOT / "index.html").write_text(html, encoding="utf-8")
 
 
