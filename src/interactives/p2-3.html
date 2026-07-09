@@ -1,0 +1,66 @@
+<figure class="ix" id="ix-p2-3">
+  <div class="ix-head">
+    <span class="lbl">Try it</span>
+    <span class="ttl">The conversion funnel</span>
+    <p class="sub">A cohort passes through the seven stages the sociologists found in every convert. Most fall away. Move the highlighted lever, how weakened someone's old ties are, and watch the final count jump.</p>
+  </div>
+  <div class="ix-ctrl">
+    <label>Cohort size <b data-v="n">10,000</b></label>
+    <input type="range" data-c="n" min="1000" max="100000" step="1000" value="10000">
+  </div>
+  <div class="ix-ctrl">
+    <label>Old ties weakened <b data-v="iso">40%</b></label>
+    <input type="range" class="warn" data-c="iso" min="5" max="95" step="1" value="40">
+  </div>
+  <div class="ix-funnel" data-c="funnel" aria-hidden="true"></div>
+  <div class="ix-big">
+    <div class="n" data-v="end">—</div>
+    <div class="l">reach conversion</div>
+  </div>
+  <figcaption class="ix-src">Seven-stage cohort model after Lofland and Stark, &ldquo;Becoming a World-Saver&rdquo;, 1965. Stage rates are illustrative; the sequence is theirs. Note which stage a Connector feature moves.</figcaption>
+</figure>
+<script>
+(function(){
+  var R=document.getElementById('ix-p2-3');
+  function $(s){return R.querySelector(s);}
+  var n=$('[data-c=n]'),iso=$('[data-c=iso]');
+  var nV=$('[data-v=n]'),isoV=$('[data-v=iso]');
+  var funnel=$('[data-c=funnel]'),endEl=$('[data-v=end]');
+  var stages=[
+    ['Under real strain',0.55],
+    ['Seeks meaning',0.6],
+    ['At a turning point',0.5],
+    ['Meets the group',0.7],
+    ['Old ties weaken',null],
+    ['Daily interaction',0.65],
+    ['Belief follows',0.8]
+  ];
+  function fmt(x){return Math.round(x).toLocaleString('en-GB');}
+  function build(){
+    funnel.innerHTML='';
+    var N=+n.value,count=N,first=N,rows=[];
+    for(var i=0;i<stages.length;i++){
+      var rate=stages[i][1]===null?(+iso.value/100):stages[i][1];
+      count*=rate;
+      rows.push({nm:stages[i][0],v:count,lever:stages[i][1]===null});
+    }
+    for(var r=0;r<rows.length;r++){
+      var pct=rows[r].v/first*100;
+      var div=document.createElement('div');
+      div.className='stage'+(rows[r].lever?' lever':'');
+      div.innerHTML='<div class="nm">'+rows[r].nm+'</div>'+
+        '<div class="barwrap"><div class="fill" style="width:'+pct+'%"></div></div>'+
+        '<div class="v">'+fmt(rows[r].v)+'</div>';
+      funnel.appendChild(div);
+    }
+    endEl.textContent=fmt(count);
+  }
+  function update(){
+    nV.textContent=(+n.value).toLocaleString('en-GB');
+    isoV.textContent=iso.value+'%';
+    build();
+  }
+  n.oninput=update;iso.oninput=update;
+  update();
+})();
+</script>

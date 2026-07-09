@@ -1,0 +1,57 @@
+<figure class="ix" id="ix-p5-3">
+  <div class="ix-head">
+    <span class="lbl">Try it</span>
+    <span class="ttl">What the small yeses add up to</span>
+    <p class="sub">Each ask is tiny, kind, and easy to say yes to. Set the size of one ask and how many people say yes. The total, routed through a single centre, is the part nobody pictures.</p>
+  </div>
+  <div class="ix-ctrl">
+    <label>People who say yes <b data-v="m">90M</b></label>
+    <input type="range" data-c="m" min="1" max="500" step="1" value="90">
+  </div>
+  <div class="ix-ctrl">
+    <label>Asks per person / year <b data-v="a">12</b></label>
+    <input type="range" class="alt" data-c="a" min="1" max="200" step="1" value="12">
+  </div>
+  <div class="ix-ctrl">
+    <label>Minutes per ask <b data-v="min">20</b></label>
+    <input type="range" class="warn" data-c="min" min="1" max="120" step="1" value="20">
+  </div>
+  <div class="ix-note">One person gives <b data-v="one">4 hours</b> a year. Nothing at all.</div>
+  <div class="ix-big">
+    <div class="n" data-v="fte">—</div>
+    <div class="l">full-time workers' worth of labour, coordinated through one centre</div>
+  </div>
+  <div class="ix-stats">
+    <div class="ix-stat"><div class="n" data-v="hours">—</div><div class="l">person-hours a year</div></div>
+    <div class="ix-stat"><div class="n" data-v="cities">—</div><div class="l">a workforce the size of</div></div>
+  </div>
+  <figcaption class="ix-src">Aggregation: people × asks × minutes, at 1,800 working hours a year. Lofland and Stark's term for the completed convert: a deployable agent.</figcaption>
+</figure>
+<script>
+(function(){
+  var R=document.getElementById('ix-p5-3');
+  function $(s){return R.querySelector(s);}
+  var m=$('[data-c=m]'),a=$('[data-c=a]'),min=$('[data-c=min]');
+  var mV=$('[data-v=m]'),aV=$('[data-v=a]'),minV=$('[data-v=min]');
+  var oneEl=$('[data-v=one]'),fte=$('[data-v=fte]'),hours=$('[data-v=hours]'),cities=$('[data-v=cities]');
+  function city(f){
+    var list=[[8900000,'New York'],[5000000,'a large capital'],[1000000,'Birmingham'],
+      [500000,'Manchester'],[100000,'a large town'],[10000,'a small town'],[0,'a village']];
+    for(var i=0;i<list.length;i++)if(f>=list[i][0])return list[i][1];
+    return 'a village';
+  }
+  function update(){
+    var M=+m.value*1e6,A=+a.value,MIN=+min.value;
+    mV.textContent=(+m.value>=1000?(+m.value/1000).toFixed(1)+'B':(+m.value)+'M');
+    aV.textContent=A;minV.textContent=MIN;
+    var oneHrs=A*MIN/60;
+    oneEl.textContent=(oneHrs<1?Math.round(oneHrs*60)+' minutes':oneHrs.toFixed(oneHrs<10?1:0)+' hours');
+    var totalHrs=M*A*MIN/60,f=totalHrs/1800;
+    hours.textContent=TWBC.fmt(totalHrs);
+    fte.textContent=TWBC.fmt(f);
+    cities.textContent=city(f);
+  }
+  [m,a,min].forEach(function(e){e.oninput=update;});
+  update();
+})();
+</script>

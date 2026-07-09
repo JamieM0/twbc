@@ -1,0 +1,61 @@
+<figure class="ix" id="ix-p3-2">
+  <div class="ix-head">
+    <span class="lbl">Try it</span>
+    <span class="ttl">Survival of a new movement</span>
+    <p class="sub">Most new movements are gone within ten years; that is the falling curve. Switch on the advantages this one has and watch the curve bend.</p>
+  </div>
+  <canvas aria-hidden="true"></canvas>
+  <div class="ix-legend">
+    <span><i data-sw="--accent"></i>base rate</span>
+    <span><i data-sw="--good"></i>with advantages</span>
+  </div>
+  <div class="ix-stats">
+    <div class="ix-stat hot"><div class="n" data-v="b10">20%</div><div class="l">base survival at 10 years</div></div>
+    <div class="ix-stat good"><div class="n" data-v="a10">—</div><div class="l">adjusted, at 10 years</div></div>
+    <div class="ix-stat good"><div class="n" data-v="a50">—</div><div class="l">adjusted, at 50 years</div></div>
+  </div>
+  <div class="ix-toggles" data-c="togs"></div>
+  <figcaption class="ix-src">Exponential survival with a documented base rate; each advantage lowers the hazard of dissolution. Compare Timothy Miller on the fate of new religious movements. The multipliers are illustrative.</figcaption>
+</figure>
+<script>
+(function(){
+  var R=document.getElementById('ix-p3-2');
+  function $(s){return R.querySelector(s);}
+  var cv=$('canvas'),togs=$('[data-c=togs]');
+  var b10=$('[data-v=b10]'),a10=$('[data-v=a10]'),a50=$('[data-v=a50]');
+  var baseH=Math.log(1/0.20)/10;
+  var factors=[
+    {name:'Vast prior audience',desc:'hundreds of millions already in daily contact',mult:0.45,on:true},
+    {name:'Professional organisers',desc:'rotas, accounts, a registration number',mult:0.5,on:true},
+    {name:'A centre that never burns out',desc:'no death, no moods, always available',mult:0.55,on:true}
+  ];
+  function css(v){return TWBC.cssVar(v);}
+  function adjH(){var h=baseH;factors.forEach(function(f){if(f.on)h*=f.mult;});return h;}
+  function surv(h,t){return Math.exp(-h*t);}
+  function draw(){
+    var ctx=TWBC.fitCanvas(cv);
+    var w=cv.getBoundingClientRect().width,h=cv.getBoundingClientRect().height,pad=6;
+    ctx.clearRect(0,0,w,h);
+    var T=50,ah=adjH();
+    var gx=10/T*w;
+    ctx.strokeStyle=css('--line');ctx.setLineDash([3,3]);ctx.beginPath();ctx.moveTo(gx,0);ctx.lineTo(gx,h);ctx.stroke();ctx.setLineDash([]);
+    ctx.fillStyle=css('--faint');ctx.font='10px sans-serif';ctx.fillText('10y',gx+3,h-4);
+    function curve(hz,color){ctx.strokeStyle=color;ctx.lineWidth=2.5;ctx.beginPath();
+      for(var t=0;t<=T;t+=0.5){var x=t/T*w,y=pad+(1-surv(hz,t))*(h-2*pad);t?ctx.lineTo(x,y):ctx.moveTo(x,y);}ctx.stroke();}
+    curve(baseH,css('--accent'));
+    curve(ah,css('--good'));
+    b10.textContent=Math.round(surv(baseH,10)*100)+'%';
+    a10.textContent=Math.round(surv(ah,10)*100)+'%';
+    a50.textContent=Math.round(surv(ah,50)*100)+'%';
+  }
+  factors.forEach(function(f){
+    var d=document.createElement('label');d.className='ix-tog';
+    d.innerHTML='<input type="checkbox" '+(f.on?'checked':'')+'><span class="t">'+f.name+'<small>'+f.desc+'</small></span>';
+    d.querySelector('input').addEventListener('change',function(e){f.on=e.target.checked;draw();});
+    togs.appendChild(d);
+  });
+  R.querySelectorAll('[data-sw]').forEach(function(i){i.style.background='var('+i.getAttribute('data-sw')+')';});
+  TWBC.onRepaint(draw);
+  draw();
+})();
+</script>

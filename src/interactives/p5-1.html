@@ -1,0 +1,75 @@
+<figure class="ix" id="ix-p5-1">
+  <div class="ix-head">
+    <span class="lbl">Try it</span>
+    <span class="ttl">Turning it off, once it copies</span>
+    <p class="sub">A system that can be copied onto home hardware is an eradication problem, not a shutdown problem. If copies appear faster than they can be pulled, the population never reaches zero. Find the line.</p>
+  </div>
+  <div class="ix-ctrl">
+    <label>Copies made per instance / month <b data-v="copy">1.0</b></label>
+    <input type="range" data-c="copy" min="0" max="30" step="1" value="10">
+  </div>
+  <div class="ix-ctrl">
+    <label>Takedowns per instance / month <b data-v="take">0.8</b></label>
+    <input type="range" class="alt" data-c="take" min="0" max="30" step="1" value="8">
+  </div>
+  <div class="ix-ctrl">
+    <label>Starting instances <b data-v="n0">100,000</b></label>
+    <input type="range" class="warn" data-c="n0" min="1" max="1000" step="1" value="100">
+  </div>
+  <canvas aria-hidden="true"></canvas>
+  <div class="ix-stats">
+    <div class="ix-stat"><div class="n" data-v="ratio">1.25</div><div class="l">copy-to-takedown ratio</div></div>
+    <div class="ix-stat"><div class="n" data-v="fin">—</div><div class="l">instances after 2 years</div></div>
+  </div>
+  <div class="ix-big">
+    <div class="n" data-v="vn">—</div>
+    <div class="l" data-c="vl"></div>
+  </div>
+  <figcaption class="ix-src">A branching threshold: the population grows whenever the copy rate exceeds the takedown rate. This is the eradication arithmetic of small open models, and of the lamps.</figcaption>
+</figure>
+<script>
+(function(){
+  var R=document.getElementById('ix-p5-1');
+  function $(s){return R.querySelector(s);}
+  var copy=$('[data-c=copy]'),take=$('[data-c=take]'),n0=$('[data-c=n0]');
+  var copyV=$('[data-v=copy]'),takeV=$('[data-v=take]'),n0V=$('[data-v=n0]');
+  var ratio=$('[data-v=ratio]'),fin=$('[data-v=fin]'),vn=$('[data-v=vn]'),vl=$('[data-c=vl]');
+  var cv=$('canvas'),cur=null;
+  function css(v){return TWBC.cssVar(v);}
+  function series(){
+    var c=+copy.value/10,t=+take.value/10,N=+n0.value*1000,pts=[N];
+    for(var m=1;m<=24;m++){N=Math.max(0,N*(1+(c-t)));N=Math.min(N,5e11);pts.push(N);}
+    return pts;
+  }
+  function draw(){
+    var ctx=TWBC.fitCanvas(cv);
+    var w=cv.getBoundingClientRect().width,h=cv.getBoundingClientRect().height,pad=8;
+    ctx.clearRect(0,0,w,h);
+    if(!cur)return;
+    var pts=cur,max=Math.max.apply(null,pts);
+    var grow=(+copy.value)>=(+take.value);
+    ctx.strokeStyle=grow?css('--accent'):css('--good');ctx.lineWidth=2.5;ctx.beginPath();
+    for(var i=0;i<pts.length;i++){var x=i/(pts.length-1)*w,y=h-pad-(pts[i]/(max||1))*(h-2*pad);i?ctx.lineTo(x,y):ctx.moveTo(x,y);}
+    ctx.stroke();
+    ctx.fillStyle=css('--faint');ctx.font='10px sans-serif';
+    ctx.fillText('now',2,h-2);ctx.fillText('2 years',w-42,h-2);
+  }
+  function update(){
+    var c=+copy.value/10,t=+take.value/10;
+    copyV.textContent=c.toFixed(1);takeV.textContent=t.toFixed(1);
+    n0V.textContent=(+n0.value*1000).toLocaleString('en-GB');
+    cur=series();draw();
+    ratio.textContent=t>0?(c/t).toFixed(2):'∞';
+    fin.textContent=TWBC.fmt(cur[cur.length-1]);
+    if(c>t){vn.textContent='Permanent';vn.style.color=css('--accent');
+      vl.textContent='Copies outrun takedowns. It cannot be switched off.';}
+    else if(c<t){vn.textContent='Eradicable';vn.style.color=css('--good');
+      vl.textContent='Takedowns win, if they can be sustained everywhere, indefinitely.';}
+    else{vn.textContent='On the knife-edge';vn.style.color=css('--muted');
+      vl.textContent='Copy rate exactly matches takedown rate.';}
+  }
+  [copy,take,n0].forEach(function(e){e.oninput=update;});
+  TWBC.onRepaint(update);
+  update();
+})();
+</script>

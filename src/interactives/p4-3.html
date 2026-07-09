@@ -1,0 +1,73 @@
+<figure class="ix" id="ix-p4-3">
+  <div class="ix-head">
+    <span class="lbl">Try it</span>
+    <span class="ttl">The loop you can't patch out</span>
+    <p class="sub">Train on believers' words and the model picks up their register. Believers then produce more of it, which re-enters training. This is Nick's audit as a dial you can turn: try to strip it out and see where it settles.</p>
+  </div>
+  <div class="ix-ctrl">
+    <label>Devotional text in the base corpus <b data-v="f0">5%</b></label>
+    <input type="range" data-c="f0" min="0" max="40" step="1" value="5">
+  </div>
+  <div class="ix-ctrl">
+    <label>Feedback strength (believers reproduce it) <b data-v="k">60%</b></label>
+    <input type="range" class="alt" data-c="k" min="0" max="100" step="1" value="60">
+  </div>
+  <div class="ix-ctrl">
+    <label>Ablation each retrain (trying to remove it) <b data-v="a">20%</b></label>
+    <input type="range" class="warn" data-c="a" min="0" max="80" step="1" value="20">
+  </div>
+  <canvas aria-hidden="true"></canvas>
+  <div class="ix-stats">
+    <div class="ix-stat hot"><div class="n" data-v="fp">—</div><div class="l">register settles at</div></div>
+    <div class="ix-stat"><div class="n" data-v="its">—</div><div class="l">retrains to settle</div></div>
+  </div>
+  <div class="ix-note" data-c="verdict"></div>
+  <figcaption class="ix-src">A feedback loop with a fixed point: while the feedback is above zero, the register survives any ablation the lab can apply, because the source is no longer a dial the lab owns.</figcaption>
+</figure>
+<script>
+(function(){
+  var R=document.getElementById('ix-p4-3');
+  function $(s){return R.querySelector(s);}
+  var f0=$('[data-c=f0]'),k=$('[data-c=k]'),a=$('[data-c=a]');
+  var f0V=$('[data-v=f0]'),kV=$('[data-v=k]'),aV=$('[data-v=a]');
+  var fp=$('[data-v=fp]'),its=$('[data-v=its]'),verdict=$('[data-c=verdict]');
+  var cv=$('canvas');
+  function css(v){return TWBC.cssVar(v);}
+  function g(x){return x/(x+0.35);}
+  function series(){
+    var base=+f0.value/100,kk=+k.value/100,abl=+a.value/100;
+    var Rv=0,pts=[0],settleAt=null;
+    for(var i=1;i<=24;i++){
+      var eff=base+kk*Rv;
+      var Rn=Math.max(0,g(eff)-abl);
+      if(settleAt===null&&Math.abs(Rn-Rv)<0.005&&i>1)settleAt=i;
+      Rv=Rn;pts.push(Rv);
+    }
+    return {pts:pts,fp:Rv,settle:settleAt||24};
+  }
+  function draw(s){
+    var ctx=TWBC.fitCanvas(cv);
+    var w=cv.getBoundingClientRect().width,h=cv.getBoundingClientRect().height,pad=6;
+    ctx.clearRect(0,0,w,h);
+    ctx.strokeStyle=css('--line');ctx.beginPath();ctx.moveTo(0,h-pad);ctx.lineTo(w,h-pad);ctx.stroke();
+    ctx.strokeStyle=css('--accent');ctx.lineWidth=2.5;ctx.beginPath();
+    for(var i=0;i<s.pts.length;i++){var x=i/(s.pts.length-1)*w,y=pad+(1-s.pts[i])*(h-2*pad);i?ctx.lineTo(x,y):ctx.moveTo(x,y);}
+    ctx.stroke();
+    ctx.fillStyle=css('--accent');
+    for(var j=0;j<s.pts.length;j++){var x2=j/(s.pts.length-1)*w,y2=pad+(1-s.pts[j])*(h-2*pad);
+      ctx.beginPath();ctx.arc(x2,y2,2.2,0,7);ctx.fill();}
+  }
+  function update(){
+    f0V.textContent=f0.value+'%';kV.textContent=k.value+'%';aV.textContent=a.value+'%';
+    var s=series();draw(s);
+    fp.textContent=Math.round(s.fp*100)+'%';
+    its.textContent=s.fp<0.01?'—':s.settle;
+    if(s.fp<0.01){verdict.textContent='Stripped out. With no feedback, ablation reaches zero.';verdict.style.color=css('--good');}
+    else if(+a.value>=60){verdict.textContent='Even at heavy ablation it holds at '+Math.round(s.fp*100)+'%. The loop refills it.';verdict.style.color=css('--accent');}
+    else{verdict.textContent='It settles at a level the loop keeps topping up.';verdict.style.color=css('--accent');}
+  }
+  f0.oninput=update;k.oninput=update;a.oninput=update;
+  TWBC.onRepaint(update);
+  update();
+})();
+</script>

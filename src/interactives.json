@@ -1,0 +1,28 @@
+{
+  "_comment": "Maps an infobox to an interactive snippet in src/interactives/. The key is the start of the infobox's bold title (as written in the manuscript markdown); the value is the snippet filename without extension. Edit freely and re-run build.py.",
+  "part-one": {
+    "The direction this usually runs": "p1-1",
+    "What people say about machines, and what they do with them": "p1-3",
+    "None of this is invented": "p1-2"
+  },
+  "part-two": {
+    "How people join new faiths": "p2-3",
+    "The real companies fight this too, sincerely": "p2-2",
+    "The step no company has taken": "p2-1"
+  },
+  "part-three": {
+    "A god with a release schedule": "p3-3",
+    "Most new religions die. This one keeps not dying": "p3-2",
+    "Terry is not invented": "p3-1"
+  },
+  "part-four": {
+    "Why this faith outcompetes the old ones": "p4-1",
+    "The slope has a literature": "p4-2",
+    "Canon from a single mouth": "p4-3"
+  },
+  "part-five": {
+    "The off switch, answered": "p5-1",
+    "The word for what the yeses add up to": "p5-3",
+    "The empty pews were load-bearing": "p5-2"
+  }
+}

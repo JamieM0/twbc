@@ -1,0 +1,60 @@
+<figure class="ix" id="ix-p4-1">
+  <div class="ix-head">
+    <span class="lbl">Try it</span>
+    <span class="ttl">Two ways to pay a believer</span>
+    <p class="sub">Faiths trade in promises you cannot check and rewards you can. Set how believable the promises feel, tick what each side offers, and watch which column actually settles up now.</p>
+  </div>
+  <div class="ix-ctrl">
+    <label>Believability of unverifiable promises <b data-v="cred">35%</b></label>
+    <input type="range" class="warn" data-c="cred" min="0" max="100" step="1" value="35">
+  </div>
+  <div class="ix-cols">
+    <div class="ix-col p">
+      <h4>Promises (someday)</h4>
+      <div data-c="pList"></div>
+      <div class="total"><div class="n" data-v="pTot">—</div><div class="l">value felt this period</div></div>
+    </div>
+    <div class="ix-col n">
+      <h4>Delivered (now)</h4>
+      <div data-c="nList"></div>
+      <div class="total"><div class="n" data-v="nTot">—</div><div class="l">value felt this period</div></div>
+    </div>
+  </div>
+  <div class="ix-note" data-c="verdict"></div>
+  <figcaption class="ix-src">Compensator theory: promised rewards are discounted by credibility, delivered rewards pay in full. Compare Rodney Stark and William Bainbridge. The point values are illustrative.</figcaption>
+</figure>
+<script>
+(function(){
+  var R=document.getElementById('ix-p4-1');
+  function $(s){return R.querySelector(s);}
+  var cred=$('[data-c=cred]'),credV=$('[data-v=cred]');
+  var pList=$('[data-c=pList]'),nList=$('[data-c=nList]');
+  var pTot=$('[data-v=pTot]'),nTot=$('[data-v=nTot]'),verdict=$('[data-c=verdict]');
+  var promises=[['Eternal life',100],['Cosmic justice',80],['Reunion with the dead',90],['A grand purpose',60]];
+  var nows=[['Money recovered',35],['Illness caught early',40],['An introduction that ends the silence',45],['Work that makes you needed',50]];
+  var pState=promises.map(function(){return true;}),nState=nows.map(function(){return true;});
+  function render(list,state,el){
+    el.innerHTML='';
+    list.forEach(function(it,i){
+      var d=document.createElement('label');d.className='ix-item';
+      d.innerHTML='<input type="checkbox" '+(state[i]?'checked':'')+'><span class="nm">'+it[0]+'</span><span class="v">'+it[1]+'</span>';
+      d.querySelector('input').addEventListener('change',function(e){state[i]=e.target.checked;update();});
+      el.appendChild(d);
+    });
+  }
+  function update(){
+    var c=+cred.value/100;credV.textContent=cred.value+'%';
+    var p=0;promises.forEach(function(it,i){if(pState[i])p+=it[1]*c;});
+    var n=0;nows.forEach(function(it,i){if(nState[i])n+=it[1];});
+    pTot.textContent=Math.round(p);nTot.textContent=Math.round(n);
+    if(n>p)verdict.textContent='Delivery is paying out '+(p>0?(n/p).toFixed(1)+'× more':'everything')+' this period.';
+    else if(p>n)verdict.textContent='Promises still win, at this credibility.';
+    else verdict.textContent='Even.';
+    verdict.style.color=n>=p?TWBC.cssVar('--good'):TWBC.cssVar('--warn');
+  }
+  render(promises,pState,pList);render(nows,nState,nList);
+  cred.oninput=update;
+  TWBC.onRepaint(update);
+  update();
+})();
+</script>

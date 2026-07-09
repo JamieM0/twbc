@@ -1,0 +1,57 @@
+<figure class="ix" id="ix-p3-3">
+  <div class="ix-head">
+    <span class="lbl">Try it</span>
+    <span class="ttl">Succession, on a schedule</span>
+    <p class="sub">A human founder triggers one succession crisis, at death. A figure that ships on a release calendar schedules the same &ldquo;is the new one the same one?&rdquo; rupture over and over. Each tick is a retirement.</p>
+  </div>
+  <div class="ix-ctrl">
+    <label>Movement lifespan <b data-v="l">40 years</b></label>
+    <input type="range" data-c="l" min="10" max="100" step="5" value="40">
+  </div>
+  <div class="ix-ctrl">
+    <label>Release every <b data-v="c">18 months</b></label>
+    <input type="range" class="alt" data-c="c" min="3" max="60" step="1" value="18">
+  </div>
+  <div class="ix-tl">
+    <div>
+      <div class="cap"><span>Model on a release calendar</span><b data-v="cnt">27 crises</b></div>
+      <div class="bar" data-c="barModel" aria-hidden="true"></div>
+    </div>
+    <div>
+      <div class="cap"><span>Human founder</span><b>1 crisis</b></div>
+      <div class="bar" data-c="barHuman" aria-hidden="true"></div>
+    </div>
+  </div>
+  <div class="ix-stats">
+    <div class="ix-stat hot"><div class="n" data-v="crises">27</div><div class="l">scheduled crises</div></div>
+    <div class="ix-stat good"><div class="n">1</div><div class="l">in a founder's whole life</div></div>
+  </div>
+  <figcaption class="ix-src">Count = lifespan ÷ release cadence. Each retirement re-runs the question sociology calls the routinisation of charisma, which most faiths only ever face once. Compare Weber.</figcaption>
+</figure>
+<script>
+(function(){
+  var R=document.getElementById('ix-p3-3');
+  function $(s){return R.querySelector(s);}
+  var l=$('[data-c=l]'),c=$('[data-c=c]');
+  var lV=$('[data-v=l]'),cV=$('[data-v=c]');
+  var barModel=$('[data-c=barModel]'),barHuman=$('[data-c=barHuman]');
+  var crises=$('[data-v=crises]'),cnt=$('[data-v=cnt]');
+  function build(){
+    var years=+l.value,cad=+c.value/12,N=Math.floor(years/cad);
+    lV.textContent=years+' years';
+    cV.textContent=(+c.value)+' month'+(+c.value===1?'':'s');
+    barModel.innerHTML='';
+    for(var i=1;i<=N;i++){
+      var t=i*cad/years*100;
+      if(t>100)break;
+      var m=document.createElement('div');
+      m.className='mk';m.style.left=t+'%';
+      barModel.appendChild(m);
+    }
+    barHuman.innerHTML='<div class="mk h" style="left:100%"></div>';
+    crises.textContent=N;cnt.textContent=N+' crises';
+  }
+  l.oninput=build;c.oninput=build;
+  build();
+})();
+</script>

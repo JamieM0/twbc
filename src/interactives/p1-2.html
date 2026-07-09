@@ -1,0 +1,75 @@
+<figure class="ix" id="ix-p1-2">
+  <div class="ix-head">
+    <span class="lbl">Try it</span>
+    <span class="ttl">If the lines keep going</span>
+    <p class="sub">The numbers in this scene already existed in 2025. A small slice of use that compounds becomes the main use. Set the starting share and how fast it grows each quarter.</p>
+  </div>
+  <div class="ix-ctrl">
+    <label>Starting share of use <b data-v="s0">8%</b></label>
+    <input type="range" data-c="s0" min="1" max="30" step="1" value="8">
+  </div>
+  <div class="ix-ctrl">
+    <label>Growth per quarter <b data-v="g">10%</b></label>
+    <input type="range" data-c="g" min="0" max="40" step="1" value="10">
+  </div>
+  <div class="ix-ctrl">
+    <label>Years projected <b data-v="y">6</b></label>
+    <input type="range" class="alt" data-c="y" min="1" max="12" step="1" value="6">
+  </div>
+  <div class="ix-stats">
+    <div class="ix-stat hot"><div class="n" data-v="end">—</div><div class="l">projected end share</div></div>
+    <div class="ix-stat"><div class="n" data-v="cross">—</div><div class="l">crosses 50% at</div></div>
+    <div class="ix-stat"><div class="n" data-v="mult">—</div><div class="l">growth over the window</div></div>
+  </div>
+  <canvas aria-hidden="true"></canvas>
+  <figcaption class="ix-src">Compounding growth that saturates as it approaches everyone (logistic). The starting point is documented; the slope is the forecast.</figcaption>
+</figure>
+<script>
+(function(){
+  var R=document.getElementById('ix-p1-2');
+  function $(s){return R.querySelector(s);}
+  var s0=$('[data-c=s0]'),g=$('[data-c=g]'),y=$('[data-c=y]');
+  var s0V=$('[data-v=s0]'),gV=$('[data-v=g]'),yV=$('[data-v=y]');
+  var endEl=$('[data-v=end]'),crossEl=$('[data-v=cross]'),multEl=$('[data-v=mult]');
+  var cv=$('canvas'),ctx=null,cur=null;
+  function css(v){return TWBC.cssVar(v);}
+  function series(){
+    var share=parseFloat(s0.value)/100,r=parseFloat(g.value)/100,Q=parseInt(y.value)*4;
+    var pts=[share],cross=null;
+    for(var q=1;q<=Q;q++){
+      share=share+r*share*(1-share);
+      pts.push(share);
+      if(cross===null&&share>=0.5)cross=q;
+    }
+    return {pts:pts,cross:cross};
+  }
+  function draw(){
+    ctx=TWBC.fitCanvas(cv);
+    var w=cv.getBoundingClientRect().width,h=cv.getBoundingClientRect().height,pad=4;
+    ctx.clearRect(0,0,w,h);
+    if(!cur)return;
+    var pts=cur.pts;
+    ctx.strokeStyle=css('--line');ctx.setLineDash([4,4]);ctx.beginPath();
+    ctx.moveTo(0,h-0.5*h);ctx.lineTo(w,h-0.5*h);ctx.stroke();ctx.setLineDash([]);
+    ctx.fillStyle=css('--faint');ctx.font='10px sans-serif';ctx.fillText('50%',4,h*0.5-4);
+    ctx.beginPath();ctx.moveTo(0,h);
+    for(var i=0;i<pts.length;i++){var x=i/(pts.length-1)*w,yy=h-pts[i]*(h-pad);ctx.lineTo(x,yy);}
+    ctx.lineTo(w,h);ctx.closePath();
+    ctx.fillStyle=css('--accent-soft');ctx.fill();
+    ctx.strokeStyle=css('--accent');ctx.lineWidth=2.5;ctx.beginPath();
+    for(var j=0;j<pts.length;j++){var x2=j/(pts.length-1)*w,y2=h-pts[j]*(h-pad);j?ctx.lineTo(x2,y2):ctx.moveTo(x2,y2);}
+    ctx.stroke();
+  }
+  function update(){
+    s0V.textContent=s0.value+'%';gV.textContent=g.value+'%';yV.textContent=y.value;
+    cur=series();
+    endEl.textContent=Math.round(cur.pts[cur.pts.length-1]*100)+'%';
+    crossEl.textContent=cur.cross===null?'not in window':(Math.floor(cur.cross/4)+'y '+(cur.cross%4*3)+'m');
+    multEl.textContent=(cur.pts[cur.pts.length-1]/cur.pts[0]).toFixed(1)+'×';
+    draw();
+  }
+  [s0,g,y].forEach(function(e){e.oninput=update;});
+  TWBC.onRepaint(draw);
+  update();
+})();
+</script>

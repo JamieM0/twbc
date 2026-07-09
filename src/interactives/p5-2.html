@@ -1,0 +1,79 @@
+<figure class="ix" id="ix-p5-2">
+  <div class="ix-head">
+    <span class="lbl">Try it</span>
+    <span class="ttl">The gap the empty pews leave</span>
+    <p class="sub">Membership in the old institutions falls. The question is whether the underlying needs fell with it, or just lost their address. The shaded gap between the two lines is the market anything new inherits.</p>
+  </div>
+  <div class="ix-ctrl">
+    <label>Membership decline / year <b data-v="d">4%</b></label>
+    <input type="range" data-c="d" min="0" max="12" step="1" value="4">
+  </div>
+  <div class="ix-ctrl">
+    <label>Did the needs fall too? <b data-v="t">not at all</b></label>
+    <input type="range" class="alt" data-c="t" min="0" max="100" step="5" value="0">
+  </div>
+  <div class="ix-ctrl">
+    <label>Years <b data-v="y">40</b></label>
+    <input type="range" class="warn" data-c="y" min="10" max="70" step="5" value="40">
+  </div>
+  <canvas aria-hidden="true"></canvas>
+  <div class="ix-legend">
+    <span><i data-sw="--accent"></i>served (membership)</span>
+    <span><i data-sw="--accent2"></i>underlying needs</span>
+  </div>
+  <div class="ix-big">
+    <div class="n" data-v="gap">—</div>
+    <div class="l">of the original need is unserved at the end</div>
+  </div>
+  <figcaption class="ix-src">Served declines with membership; the needs hold their size unless you assume they fall. The story takes a position on that slider. The gap is what Bethel's nine pews stood in front of.</figcaption>
+</figure>
+<script>
+(function(){
+  var R=document.getElementById('ix-p5-2');
+  function $(s){return R.querySelector(s);}
+  var d=$('[data-c=d]'),t=$('[data-c=t]'),y=$('[data-c=y]');
+  var dV=$('[data-v=d]'),tV=$('[data-v=t]'),yV=$('[data-v=y]');
+  var gapEl=$('[data-v=gap]');
+  var cv=$('canvas'),cur=null;
+  var words={0:'not at all',25:'a little',50:'halfway',75:'mostly',100:'entirely'};
+  function css(v){return TWBC.cssVar(v);}
+  function series(){
+    var dec=+d.value/100,track=+t.value/100,Y=+y.value,served0=60;
+    var served=[],needs=[];
+    for(var i=0;i<=Y;i++){
+      var s=served0*Math.pow(1-dec,i);
+      var n=100*(1-track)+s*track;
+      served.push(s);needs.push(n);
+    }
+    return {served:served,needs:needs,Y:Y};
+  }
+  function draw(){
+    var ctx=TWBC.fitCanvas(cv);
+    var w=cv.getBoundingClientRect().width,h=cv.getBoundingClientRect().height,pad=6;
+    ctx.clearRect(0,0,w,h);
+    if(!cur)return;
+    var s=cur,Y=s.Y;
+    function X(i){return i/Y*w;}
+    function Yv(v){return pad+(1-v/100)*(h-2*pad);}
+    ctx.beginPath();ctx.moveTo(X(0),Yv(s.needs[0]));
+    for(var i=0;i<=Y;i++)ctx.lineTo(X(i),Yv(s.needs[i]));
+    for(var j=Y;j>=0;j--)ctx.lineTo(X(j),Yv(s.served[j]));
+    ctx.closePath();ctx.fillStyle=css('--accent-soft');ctx.fill();
+    ctx.strokeStyle=css('--accent2');ctx.lineWidth=2.5;ctx.beginPath();
+    for(var a=0;a<=Y;a++){a?ctx.lineTo(X(a),Yv(s.needs[a])):ctx.moveTo(X(a),Yv(s.needs[a]));}ctx.stroke();
+    ctx.strokeStyle=css('--accent');ctx.lineWidth=2.5;ctx.beginPath();
+    for(var b=0;b<=Y;b++){b?ctx.lineTo(X(b),Yv(s.served[b])):ctx.moveTo(X(b),Yv(s.served[b]));}ctx.stroke();
+  }
+  function update(){
+    dV.textContent=d.value+'%';
+    tV.textContent=words[+t.value]||(t.value+'%');
+    yV.textContent=y.value;
+    cur=series();draw();
+    gapEl.textContent=Math.round(cur.needs[cur.Y]-cur.served[cur.Y])+'%';
+  }
+  [d,t,y].forEach(function(e){e.oninput=update;});
+  R.querySelectorAll('[data-sw]').forEach(function(i){i.style.background='var('+i.getAttribute('data-sw')+')';});
+  TWBC.onRepaint(update);
+  update();
+})();
+</script>

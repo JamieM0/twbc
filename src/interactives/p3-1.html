@@ -1,0 +1,65 @@
+<figure class="ix" id="ix-p3-1">
+  <div class="ix-head">
+    <span class="lbl">Try it</span>
+    <span class="ttl">A tiny share of a huge number</span>
+    <p class="sub">&ldquo;Small&rdquo; and &ldquo;a lot of people&rdquo; can both be true. Set a rate and a population. The dot grid is a scaled sample of ten thousand; the number underneath is real.</p>
+  </div>
+  <div class="ix-ctrl">
+    <label>Rate <b data-v="r">0.07%</b></label>
+    <input type="range" data-c="r" min="1" max="500" step="1" value="7">
+  </div>
+  <div class="ix-ctrl">
+    <label>Weekly users <b data-v="p">800M</b></label>
+    <input type="range" class="alt" data-c="p" min="10" max="2000" step="10" value="800">
+  </div>
+  <div class="ix-big">
+    <div class="n" data-v="out">560,000</div>
+    <div class="l"><span data-v="perday">80,000 a day</span> · people, at that rate, in that population</div>
+  </div>
+  <canvas aria-hidden="true" style="height:130px"></canvas>
+  <div class="ix-cap">10,000 dots · the highlighted share matches the rate</div>
+  <figcaption class="ix-src">Straight multiplication, rate × population. The grid exists because a percentage hides its own size.</figcaption>
+</figure>
+<script>
+(function(){
+  var R=document.getElementById('ix-p3-1');
+  function $(s){return R.querySelector(s);}
+  var r=$('[data-c=r]'),p=$('[data-c=p]');
+  var rV=$('[data-v=r]'),pV=$('[data-v=p]');
+  var out=$('[data-v=out]'),perday=$('[data-v=perday]');
+  var cv=$('canvas');
+  function css(v){return TWBC.cssVar(v);}
+  function fmt(x){x=Math.round(x);
+    if(x>=1e9)return (x/1e9).toFixed(2)+' billion';
+    if(x>=1e6)return (x/1e6).toFixed(2)+' million';
+    return x.toLocaleString('en-GB');}
+  function rate(){return +r.value/10000;}   /* slider 1..500 -> 0.01%..5% */
+  function pop(){return +p.value*1e6;}
+  function drawGrid(frac){
+    var ctx=TWBC.fitCanvas(cv);
+    var w=cv.getBoundingClientRect().width,h=cv.getBoundingClientRect().height;
+    ctx.clearRect(0,0,w,h);
+    var cols=100,rows=100,total=cols*rows;
+    var gx=(w-8)/cols,gy=(h-8)/rows,rad=Math.max(0.6,Math.min(gx,gy)/2-0.3);
+    var hot=Math.round(frac*total);
+    var cDot=css('--line'),cHot=css('--accent');
+    for(var i=0;i<total;i++){
+      var c=i%cols,ro=Math.floor(i/cols);
+      var x=4+c*gx+gx/2,y=4+ro*gy+gy/2;
+      ctx.beginPath();ctx.arc(x,y,rad,0,7);
+      ctx.fillStyle=i<hot?cHot:cDot;ctx.fill();
+    }
+  }
+  function update(){
+    var f=rate(),P=pop();
+    rV.textContent=(f*100).toFixed(2).replace(/\.?0+$/,'')+'%';
+    pV.textContent=(+p.value>=1000?(+p.value/1000).toFixed(1)+'B':(+p.value)+'M');
+    out.textContent=fmt(f*P);
+    perday.textContent=fmt(f*P/7)+' a day';
+    drawGrid(f);
+  }
+  r.oninput=update;p.oninput=update;
+  TWBC.onRepaint(update);
+  update();
+})();
+</script>

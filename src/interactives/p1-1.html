@@ -1,0 +1,89 @@
+<figure class="ix" id="ix-p1-1">
+  <div class="ix-head">
+    <span class="lbl">Try it</span>
+    <span class="ttl">Watch the checking fade</span>
+    <p class="sub">A reliable system trains you to stop checking it. Set how good it is, then run a thousand interactions and watch the checking habit decay, and the rare mistakes slip through.</p>
+  </div>
+  <div class="ix-ctrl">
+    <label>System reliability <b data-v="rel">99.0%</b></label>
+    <input type="range" data-c="rel" min="90" max="99.9" step="0.1" value="99">
+  </div>
+  <div class="ix-ctrl">
+    <label>How fast trust builds <b data-v="tr">medium</b></label>
+    <input type="range" class="alt" data-c="tr" min="1" max="10" step="1" value="5">
+  </div>
+  <div class="ix-stats">
+    <div class="ix-stat cool"><div class="n" data-v="check">100%</div><div class="l">your checking rate now</div></div>
+    <div class="ix-stat hot"><div class="n" data-v="missed">0</div><div class="l">errors that slipped past</div></div>
+    <div class="ix-stat good"><div class="n" data-v="caught">0</div><div class="l">errors you caught</div></div>
+  </div>
+  <canvas aria-hidden="true"></canvas>
+  <div class="ix-legend">
+    <span><i data-sw="--accent2"></i>checking rate</span>
+    <span><i data-sw="--accent"></i>missed errors (cumulative)</span>
+  </div>
+  <div class="ix-btns">
+    <button class="primary" data-c="run">Run 1,000 interactions</button>
+    <button data-c="reset">Reset</button>
+  </div>
+  <figcaption class="ix-src">A model of automation complacency: checking decays while checks keep finding nothing, and recovers a little after each scare. Parasuraman and Manzey, 2010.</figcaption>
+</figure>
+<script>
+(function(){
+  var R=document.getElementById('ix-p1-1');
+  function $(s){return R.querySelector(s);}
+  var rel=$('[data-c=rel]'),tr=$('[data-c=tr]');
+  var relV=$('[data-v=rel]'),trV=$('[data-v=tr]');
+  var checkV=$('[data-v=check]'),missedV=$('[data-v=missed]'),caughtV=$('[data-v=caught]');
+  var cv=$('canvas'),ctx=null,hist=[],anim=null;
+  var words=['','minimal','low','low','medium','medium','medium','high','high','max','max'];
+  function css(v){return TWBC.cssVar(v);}
+  function simulate(){
+    var p=parseFloat(rel.value)/100, trust=(+tr.value)*0.002;
+    var check=1,missed=0,caught=0; hist=[];
+    for(var i=0;i<1000;i++){
+      var didCheck=Math.random()<check, correct=Math.random()<p;
+      if(correct){ if(didCheck) check*=(1-trust); }
+      else if(didCheck){ caught++; check=Math.min(1,check+0.15); }
+      else missed++;
+      hist.push({c:check,m:missed});
+    }
+    return {caught:caught};
+  }
+  function draw(upto){
+    ctx=TWBC.fitCanvas(cv);
+    var w=cv.getBoundingClientRect().width,h=cv.getBoundingClientRect().height;
+    ctx.clearRect(0,0,w,h);
+    if(!hist.length)return;
+    var n=upto||hist.length, maxM=Math.max(5,hist[hist.length-1].m);
+    ctx.strokeStyle=css('--line');ctx.lineWidth=1;
+    ctx.beginPath();ctx.moveTo(0,h-1);ctx.lineTo(w,h-1);ctx.stroke();
+    ctx.strokeStyle=css('--accent2');ctx.lineWidth=2;ctx.beginPath();
+    for(var i=0;i<n;i++){var x=i/(hist.length-1)*w,y=h-hist[i].c*h;i?ctx.lineTo(x,y):ctx.moveTo(x,y);}ctx.stroke();
+    ctx.strokeStyle=css('--accent');ctx.lineWidth=2;ctx.beginPath();
+    for(var j=0;j<n;j++){var x2=j/(hist.length-1)*w,y2=h-(hist[j].m/maxM)*h;j?ctx.lineTo(x2,y2):ctx.moveTo(x2,y2);}ctx.stroke();
+  }
+  function run(){
+    cancelAnimationFrame(anim);
+    var res=simulate(),frame=0,total=hist.length;
+    (function step(){
+      frame+=Math.max(6,total/60);
+      var f=Math.min(total,Math.floor(frame)),cur=hist[f-1]||hist[0];
+      checkV.textContent=Math.round(cur.c*100)+'%';
+      missedV.textContent=cur.m;
+      caughtV.textContent=Math.round(res.caught*(f/total));
+      draw(f);
+      if(f<total)anim=requestAnimationFrame(step);
+      else caughtV.textContent=res.caught;
+    })();
+  }
+  function reset(){cancelAnimationFrame(anim);hist=[];draw();
+    checkV.textContent='100%';missedV.textContent='0';caughtV.textContent='0';}
+  rel.oninput=function(){relV.textContent=parseFloat(rel.value).toFixed(1)+'%';};
+  tr.oninput=function(){trV.textContent=words[+tr.value];};
+  $('[data-c=run]').onclick=run;
+  $('[data-c=reset]').onclick=reset;
+  R.querySelectorAll('[data-sw]').forEach(function(i){i.style.background='var('+i.getAttribute('data-sw')+')';});
+  TWBC.onRepaint(function(){draw();});
+})();
+</script>

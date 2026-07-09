@@ -1,0 +1,82 @@
+<figure class="ix" id="ix-p2-1">
+  <div class="ix-head">
+    <span class="lbl">Try it</span>
+    <span class="ttl">Why Introductions is irresistible to build</span>
+    <p class="sub">Connect people to each other and the number of possible pairs grows with the square of the number of people, while the cost of adding one more person stays flat. Drag the size and watch value pull away from cost.</p>
+  </div>
+  <div class="ix-ctrl">
+    <label>People connected <b data-v="n">40</b></label>
+    <input type="range" data-c="n" min="2" max="400" step="1" value="40">
+  </div>
+  <div class="ix-ctrl">
+    <label>Share who actually pair up <b data-v="m">30%</b></label>
+    <input type="range" class="warn" data-c="m" min="1" max="100" step="1" value="30">
+  </div>
+  <div class="ix-stats">
+    <div class="ix-stat cool"><div class="n" data-v="conns">—</div><div class="l">possible introductions</div></div>
+    <div class="ix-stat"><div class="n" data-v="cost">—</div><div class="l">cost units (flat, per person)</div></div>
+  </div>
+  <canvas data-c="net" aria-hidden="true" style="height:150px"></canvas>
+  <canvas data-c="chart" aria-hidden="true" style="height:120px"></canvas>
+  <div class="ix-legend">
+    <span><i data-sw="--accent2"></i>value (grows with n²)</span>
+    <span><i data-sw="--accent"></i>cost (grows with n)</span>
+  </div>
+  <figcaption class="ix-src">Metcalfe-style network value: pairs = n(n−1)/2 × pairing rate; cost linear in n. The gap between the two lines is the argument nobody in the meeting has to make out loud.</figcaption>
+</figure>
+<script>
+(function(){
+  var R=document.getElementById('ix-p2-1');
+  function $(s){return R.querySelector(s);}
+  var n=$('[data-c=n]'),m=$('[data-c=m]');
+  var nV=$('[data-v=n]'),mV=$('[data-v=m]');
+  var connsEl=$('[data-v=conns]'),costEl=$('[data-v=cost]');
+  var net=$('[data-c=net]'),chart=$('[data-c=chart]');
+  function css(v){return TWBC.cssVar(v);}
+  // deterministic pseudo-random so the web doesn't reshuffle on every repaint
+  function rng(seed){return function(){seed=(seed*9301+49297)%233280;return seed/233280;};}
+  function drawNet(N,rate){
+    var ctx=TWBC.fitCanvas(net);
+    var w=net.getBoundingClientRect().width,h=net.getBoundingClientRect().height;
+    ctx.clearRect(0,0,w,h);
+    var show=Math.min(N,26),cx=w/2,cy=h/2,Rr=Math.min(w,h)/2-14,pos=[];
+    for(var i=0;i<show;i++){var a=i/show*Math.PI*2-Math.PI/2;pos.push([cx+Math.cos(a)*Rr,cy+Math.sin(a)*Rr]);}
+    var rnd=rng(42+N);
+    ctx.strokeStyle=css('--accent2');ctx.globalAlpha=0.18;ctx.lineWidth=1;
+    for(var i2=0;i2<show;i2++)for(var j=i2+1;j<show;j++){
+      if(rnd()<rate){ctx.beginPath();ctx.moveTo(pos[i2][0],pos[i2][1]);ctx.lineTo(pos[j][0],pos[j][1]);ctx.stroke();}
+    }
+    ctx.globalAlpha=1;ctx.fillStyle=css('--accent2');
+    for(var k=0;k<show;k++){ctx.beginPath();ctx.arc(pos[k][0],pos[k][1],4,0,7);ctx.fill();}
+    if(N>show){ctx.fillStyle=css('--faint');ctx.font='11px sans-serif';ctx.textAlign='center';
+      ctx.fillText('showing 26 of '+N,cx,h-2);}
+  }
+  function drawChart(N,rate){
+    var ctx=TWBC.fitCanvas(chart);
+    var w=chart.getBoundingClientRect().width,h=chart.getBoundingClientRect().height,pad=6;
+    ctx.clearRect(0,0,w,h);
+    var maxN=400;
+    function valAt(x){return x*(x-1)/2*rate;}
+    var maxVal=valAt(maxN),costScale=maxVal/maxN;
+    ctx.strokeStyle=css('--accent2');ctx.lineWidth=2.5;ctx.beginPath();
+    for(var x=0;x<=maxN;x+=4){var px=x/maxN*w,py=h-pad-valAt(x)/maxVal*(h-2*pad);x?ctx.lineTo(px,py):ctx.moveTo(px,py);}
+    ctx.stroke();
+    ctx.strokeStyle=css('--accent');ctx.lineWidth=2.5;ctx.beginPath();
+    for(var x2=0;x2<=maxN;x2+=4){var px2=x2/maxN*w,py2=h-pad-(x2*costScale)/maxVal*(h-2*pad);x2?ctx.lineTo(px2,py2):ctx.moveTo(px2,py2);}
+    ctx.stroke();
+    var mx=N/maxN*w;
+    ctx.strokeStyle=css('--line');ctx.setLineDash([3,3]);ctx.beginPath();ctx.moveTo(mx,0);ctx.lineTo(mx,h);ctx.stroke();ctx.setLineDash([]);
+  }
+  function update(){
+    var N=+n.value,rate=+m.value/100;
+    nV.textContent=N;mV.textContent=m.value+'%';
+    connsEl.textContent=TWBC.fmt(N*(N-1)/2*rate);
+    costEl.textContent=N;
+    drawNet(N,rate);drawChart(N,rate);
+  }
+  n.oninput=update;m.oninput=update;
+  R.querySelectorAll('[data-sw]').forEach(function(i){i.style.background='var('+i.getAttribute('data-sw')+')';});
+  TWBC.onRepaint(update);
+  update();
+})();
+</script>

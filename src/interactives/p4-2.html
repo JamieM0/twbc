@@ -1,0 +1,71 @@
+<figure class="ix" id="ix-p4-2">
+  <div class="ix-head">
+    <span class="lbl">Try it</span>
+    <span class="ttl">Judgement is a skill that fades</span>
+    <p class="sub">Hand decisions over and the capacity to make them yourself decays; it comes back far more slowly than it went. Pick the year you try to take control back, and see whether you can.</p>
+  </div>
+  <div class="ix-ctrl">
+    <label>Share of decisions delegated <b data-v="d">70%</b></label>
+    <input type="range" data-c="d" min="0" max="95" step="5" value="70">
+  </div>
+  <div class="ix-ctrl">
+    <label>Try to take it back in year <b data-v="r">30</b></label>
+    <input type="range" class="alt" data-c="r" min="0" max="40" step="1" value="30">
+  </div>
+  <canvas aria-hidden="true"></canvas>
+  <div class="ix-stats">
+    <div class="ix-stat hot"><div class="n" data-v="low">—</div><div class="l">lowest capacity reached</div></div>
+    <div class="ix-stat"><div class="n" data-v="fin">—</div><div class="l">capacity at year 40</div></div>
+  </div>
+  <div class="ix-note" data-c="note"></div>
+  <figcaption class="ix-src">Asymmetric decay and recovery (a ratchet): the core claim of &ldquo;Gradual Disempowerment&rdquo;, Kulveit and colleagues, 2025. Rates illustrative; the asymmetry is the argument.</figcaption>
+</figure>
+<script>
+(function(){
+  var R=document.getElementById('ix-p4-2');
+  function $(s){return R.querySelector(s);}
+  var d=$('[data-c=d]'),r=$('[data-c=r]');
+  var dV=$('[data-v=d]'),rV=$('[data-v=r]');
+  var low=$('[data-v=low]'),fin=$('[data-v=fin]'),note=$('[data-c=note]');
+  var cv=$('canvas');
+  var decayFast=0.35,regrowSlow=0.05,T=40;
+  function css(v){return TWBC.cssVar(v);}
+  function series(){
+    var deleg=+d.value/100,reclaimY=+r.value,S=100,pts=[100],lowest=100;
+    for(var t=1;t<=T;t++){
+      var curDeleg=t>=reclaimY?0.1:deleg;
+      var target=100*(1-curDeleg*0.9);
+      var rate=S>target?decayFast:regrowSlow;
+      S+=(target-S)*rate;
+      pts.push(S);if(S<lowest)lowest=S;
+    }
+    return {pts:pts,low:lowest,reclaimY:reclaimY};
+  }
+  function draw(s){
+    var ctx=TWBC.fitCanvas(cv);
+    var w=cv.getBoundingClientRect().width,h=cv.getBoundingClientRect().height,pad=6;
+    ctx.clearRect(0,0,w,h);
+    var rx=s.reclaimY/T*w;
+    ctx.strokeStyle=css('--accent2');ctx.setLineDash([3,3]);ctx.globalAlpha=.6;
+    ctx.beginPath();ctx.moveTo(rx,0);ctx.lineTo(rx,h);ctx.stroke();
+    ctx.setLineDash([]);ctx.globalAlpha=1;
+    ctx.fillStyle=css('--accent2');ctx.font='10px sans-serif';
+    ctx.fillText('take back',Math.min(rx+3,w-52),12);
+    ctx.strokeStyle=css('--accent');ctx.lineWidth=2.5;ctx.beginPath();
+    for(var i=0;i<s.pts.length;i++){var x=i/T*w,y=pad+(1-s.pts[i]/100)*(h-2*pad);i?ctx.lineTo(x,y):ctx.moveTo(x,y);}
+    ctx.stroke();
+  }
+  function update(){
+    dV.textContent=d.value+'%';rV.textContent=r.value;
+    var s=series();draw(s);
+    low.textContent=Math.round(s.low);
+    fin.textContent=Math.round(s.pts[s.pts.length-1]);
+    var recovered=s.pts[s.pts.length-1]-s.low;
+    note.textContent=recovered<8?'Too late: the skill did not come back in time.':(recovered<25?'Partial recovery only.':'Recovered, but slowly.');
+    note.style.color=recovered<8?css('--accent'):(recovered<25?css('--warn'):css('--good'));
+  }
+  d.oninput=update;r.oninput=update;
+  TWBC.onRepaint(update);
+  update();
+})();
+</script>

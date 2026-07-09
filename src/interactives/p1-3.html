@@ -1,0 +1,81 @@
+<figure class="ix" id="ix-p1-3">
+  <div class="ix-head">
+    <span class="lbl">Try it</span>
+    <span class="ttl">How far people slide toward advice</span>
+    <p class="sub">Your final answer lands part-way between your own guess and the advice. In the experiments, people slide further when the advice is labelled as a model's. Set the scene, then let the rounds repeat.</p>
+  </div>
+  <div class="ix-ctrl">
+    <label>Your own estimate <b data-v="you">30</b></label>
+    <input type="range" data-c="you" min="0" max="100" step="1" value="30">
+  </div>
+  <div class="ix-ctrl">
+    <label>The advice says <b data-v="adv">70</b></label>
+    <input type="range" class="warn" data-c="adv" min="0" max="100" step="1" value="70">
+  </div>
+  <div class="ix-seg" role="group" aria-label="advice source">
+    <button class="h" data-c="bh" aria-pressed="false">Labelled &ldquo;a person&rdquo;</button>
+    <button data-c="ba" aria-pressed="true">Labelled &ldquo;the model&rdquo;</button>
+  </div>
+  <div class="ix-track" aria-hidden="true">
+    <div class="axis"></div>
+    <div class="tlab" style="left:0">0</div>
+    <div class="tlab" style="left:100%">100</div>
+    <div class="dlab" data-c="labYou">you</div>
+    <div class="dlab" data-c="labAdv">advice</div>
+    <div class="dot you" data-c="dYou"></div>
+    <div class="dot adv" data-c="dAdv"></div>
+    <div class="dot fin" data-c="dFin"></div>
+  </div>
+  <div class="ix-stats">
+    <div class="ix-stat cool"><div class="n" data-v="woa">45%</div><div class="l">weight put on the advice</div></div>
+    <div class="ix-stat"><div class="n" data-v="final">48</div><div class="l">your final answer</div></div>
+  </div>
+  <div class="ix-btns">
+    <button class="primary" data-c="rep">Repeat 10 rounds, adopting each answer</button>
+    <button data-c="reset">Reset</button>
+  </div>
+  <figcaption class="ix-src">Weight-of-advice model. People weight advice labelled algorithmic more heavily than the same advice labelled human. Logg and colleagues, 2019; the exact weights here are illustrative.</figcaption>
+</figure>
+<script>
+(function(){
+  var R=document.getElementById('ix-p1-3');
+  function $(s){return R.querySelector(s);}
+  var you=$('[data-c=you]'),adv=$('[data-c=adv]');
+  var youV=$('[data-v=you]'),advV=$('[data-v=adv]');
+  var bh=$('[data-c=bh]'),ba=$('[data-c=ba]');
+  var dYou=$('[data-c=dYou]'),dAdv=$('[data-c=dAdv]'),dFin=$('[data-c=dFin]');
+  var labYou=$('[data-c=labYou]'),labAdv=$('[data-c=labAdv]');
+  var woaEl=$('[data-v=woa]'),finEl=$('[data-v=final]');
+  var algo=true,timer=null;
+  var WOA_H=0.25,WOA_A=0.45;
+  function w(){return algo?WOA_A:WOA_H;}
+  function compute(){
+    var yv=+you.value,av=+adv.value,f=yv+w()*(av-yv);
+    dYou.style.left=yv+'%';dAdv.style.left=av+'%';dFin.style.left=f+'%';
+    labYou.style.left=yv+'%';labAdv.style.left=av+'%';
+    woaEl.textContent=Math.round(w()*100)+'%';
+    finEl.textContent=Math.round(f);
+    dFin.style.background=algo?TWBC.cssVar('--accent2'):TWBC.cssVar('--good');
+  }
+  function setSrc(a){algo=a;ba.setAttribute('aria-pressed',a);bh.setAttribute('aria-pressed',!a);compute();}
+  you.oninput=function(){youV.textContent=you.value;compute();};
+  adv.oninput=function(){advV.textContent=adv.value;compute();};
+  bh.onclick=function(){setSrc(false);};
+  ba.onclick=function(){setSrc(true);};
+  $('[data-c=rep]').onclick=function(){
+    clearInterval(timer);
+    var av=+adv.value,yv=+you.value,i=0;
+    timer=setInterval(function(){
+      yv=yv+w()*(av-yv);
+      you.value=Math.round(yv);youV.textContent=you.value;compute();
+      if(++i>=10)clearInterval(timer);
+    },260);
+  };
+  $('[data-c=reset]').onclick=function(){
+    clearInterval(timer);
+    you.value=30;adv.value=70;youV.textContent='30';advV.textContent='70';setSrc(true);
+  };
+  TWBC.onRepaint(compute);
+  compute();
+})();
+</script>

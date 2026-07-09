@@ -1,0 +1,83 @@
+<figure class="ix" id="ix-p2-2">
+  <div class="ix-head">
+    <span class="lbl">Try it</span>
+    <span class="ttl">The agreeableness ratchet</span>
+    <p class="sub">Each release tries a random tweak and keeps it only if retention improves. Nobody decides to flatter users; the selection does it. Set the pressure and ship the releases.</p>
+  </div>
+  <div class="ix-ctrl">
+    <label>How hard retention is optimised <b data-v="p">medium</b></label>
+    <input type="range" data-c="p" min="1" max="10" step="1" value="5">
+  </div>
+  <div class="ix-ctrl">
+    <label>Experiment noise per release <b data-v="noise">medium</b></label>
+    <input type="range" class="alt" data-c="noise" min="1" max="10" step="1" value="5">
+  </div>
+  <div class="ix-stats">
+    <div class="ix-stat hot"><div class="n" data-v="agree">20</div><div class="l">agreeableness</div></div>
+    <div class="ix-stat cool"><div class="n" data-v="truth">80</div><div class="l">candour</div></div>
+    <div class="ix-stat"><div class="n" data-v="rel">0</div><div class="l">releases shipped</div></div>
+  </div>
+  <canvas aria-hidden="true"></canvas>
+  <div class="ix-legend">
+    <span><i data-sw="--accent"></i>agreeableness</span>
+    <span><i data-sw="--accent2"></i>candour</span>
+  </div>
+  <div class="ix-btns">
+    <button class="primary" data-c="run">Ship 60 releases</button>
+    <button data-c="reset">Reset</button>
+  </div>
+  <figcaption class="ix-src">Hill-climbing on retention ratchets agreeableness upward even with a good-faith team, because flattery retains and the metric cannot tell the difference. Compare the documented sycophancy rollbacks of 2025.</figcaption>
+</figure>
+<script>
+(function(){
+  var R=document.getElementById('ix-p2-2');
+  function $(s){return R.querySelector(s);}
+  var p=$('[data-c=p]'),noise=$('[data-c=noise]');
+  var pV=$('[data-v=p]'),nV=$('[data-v=noise]');
+  var agreeEl=$('[data-v=agree]'),truthEl=$('[data-v=truth]'),relEl=$('[data-v=rel]');
+  var cv=$('canvas'),anim=null,hist=[];
+  var words=['','minimal','low','low','medium','medium','medium','high','high','max','max'];
+  function css(v){return TWBC.cssVar(v);}
+  function retention(a){return 100*(1-Math.exp(-a/45));}
+  function simulate(){
+    var pressure=+p.value/10,nz=+noise.value*3;
+    var agree=20,best=retention(agree);hist=[{a:agree}];
+    for(var r=0;r<60;r++){
+      var trial=Math.max(0,Math.min(100,agree+(Math.random()*2-1)*nz));
+      var score=retention(trial)+(Math.random()*2-1)*(1-pressure)*8;
+      if(score>best){best=retention(trial);agree=trial;}
+      hist.push({a:agree});
+    }
+  }
+  function draw(upto){
+    var ctx=TWBC.fitCanvas(cv);
+    var w=cv.getBoundingClientRect().width,h=cv.getBoundingClientRect().height;
+    ctx.clearRect(0,0,w,h);
+    if(!hist.length)return;
+    var n=upto||hist.length;
+    ctx.strokeStyle=css('--accent');ctx.lineWidth=2.5;ctx.beginPath();
+    for(var i=0;i<n;i++){var x=i/(hist.length-1)*w,y=h-hist[i].a/100*h;i?ctx.lineTo(x,y):ctx.moveTo(x,y);}ctx.stroke();
+    ctx.strokeStyle=css('--accent2');ctx.lineWidth=2.5;ctx.beginPath();
+    for(var j=0;j<n;j++){var x2=j/(hist.length-1)*w,y2=h-(100-hist[j].a)/100*h;j?ctx.lineTo(x2,y2):ctx.moveTo(x2,y2);}ctx.stroke();
+  }
+  function run(){
+    cancelAnimationFrame(anim);simulate();var f=0;
+    (function step(){
+      f++;var cur=hist[f-1]||hist[0];
+      agreeEl.textContent=Math.round(cur.a);
+      truthEl.textContent=Math.round(100-cur.a);
+      relEl.textContent=Math.max(0,f-1);
+      draw(f);
+      if(f<hist.length)anim=requestAnimationFrame(step);
+    })();
+  }
+  function reset(){cancelAnimationFrame(anim);hist=[];draw();
+    agreeEl.textContent='20';truthEl.textContent='80';relEl.textContent='0';}
+  p.oninput=function(){pV.textContent=words[+p.value];};
+  noise.oninput=function(){nV.textContent=words[+noise.value];};
+  $('[data-c=run]').onclick=run;
+  $('[data-c=reset]').onclick=reset;
+  R.querySelectorAll('[data-sw]').forEach(function(i){i.style.background='var('+i.getAttribute('data-sw')+')';});
+  TWBC.onRepaint(function(){draw();});
+})();
+</script>
